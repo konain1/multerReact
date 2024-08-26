@@ -5,20 +5,7 @@ import './App.css';
 function App() {
   const [file, setFile] = useState(null);
   const [imgFiles, setImgFiles] = useState([]);
-
-  const upload = async () => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post('http://localhost:3000/upload', formData);
-      console.log('Uploaded:', response.data);
-      // Refresh the image list after upload
-      fetchImages();
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
-  };
+  const [imgUrl, setImgUrl] = useState('');
 
   const fetchImages = async () => {
     try {
@@ -30,6 +17,35 @@ function App() {
     }
   };
 
+  const handleCloudinary = async (event) => {
+    let file = event.target.files[0];
+    let data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', 'cloudpreset');
+    data.append('cloud_name', 'dleyuli2e');
+
+    try {
+      let response = await axios.post('https://api.cloudinary.com/v1_1/dleyuli2e/image/upload', data);
+      let result = response.data;
+      console.log(result.url);
+      setImgUrl(result.url);
+    } catch (error) {
+      console.error('Error uploading to Cloudinary:', error);
+    }
+  };
+
+  const handleSendImageUrl = async () => {
+    if (!imgUrl) return;
+
+    try {
+      let response = await axios.post('http://localhost:3000/imageUrl', { imageUrl: imgUrl });
+      let result = response.data;
+      console.log(result);
+    } catch (error) {
+      console.error('Error sending image URL to the server:', error);
+    }
+  };
+
   useEffect(() => {
     fetchImages();
   }, []);
@@ -37,11 +53,19 @@ function App() {
   return (
     <>
       <div>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={upload}>Upload</button>
+        <input type="file" onChange={handleCloudinary} />
+        <button onClick={handleSendImageUrl}>Upload</button>
       </div>
       <div>
-        {imgFiles && imgFiles.length > 0 && (
+        {imgUrl && (
+          <img
+            style={{ height: '100px', width: '200px' }}
+            src={imgUrl}
+            alt="Uploaded to Cloudinary"
+          />
+        )}
+        {/* Uncomment this section to display images fetched from the server */}
+        {/* {imgFiles && imgFiles.length > 0 && (
           <>
             {imgFiles.map((file, index) => (
               <div key={index} style={{ width: '400px', height: '200px' }}>
@@ -53,7 +77,7 @@ function App() {
               </div>
             ))}
           </>
-        )}
+        )} */}
       </div>
     </>
   );

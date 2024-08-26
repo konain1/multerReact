@@ -33,6 +33,23 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
+router.post('/imageUrl', async (req, res) => {
+    const data = req.body.imageUrl;  // Accessing the correct key from req.body
+
+    console.log(data);
+    if (data) {
+        try {
+            const newImg = await ImageModel.create({ image: data });
+            await newImg.save();
+            return res.json({newImg});
+        } catch (error) {
+            console.error('Error saving image URL:', error);
+            return res.status(500).json({ msg: 'Failed to save image URL', error });
+        }
+    }
+    res.status(400).json('not got it');  // Send a 400 response if no data is provided
+});
+
 router.get('/download',async(req,res)=>{
     let imagess = await ImageModel.find();
 
